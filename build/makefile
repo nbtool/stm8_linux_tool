@@ -21,6 +21,9 @@ clean:
 	rm -f $(BIN_PATH)/*
 
 flash:
-	$(z_stm8flash) -c stlinkv2 -p stm8s103 -w $(BIN_PATH)/*.ihx
+	echo "00 00 ff 00 ff 00 ff 00 ff 00 ff" | xxd -r -p > factory_defaults.bin
+	$(z_stm8flash) -c stlinkv2 -p stm8s103?3 -s opt -w factory_defaults.bin
+	$(z_stm8flash) -c stlinkv2 -p stm8s103?3 -w $(BIN_PATH)/*.ihx
+	rm factory_defaults.bin
 
 
