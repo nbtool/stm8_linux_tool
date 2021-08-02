@@ -6,15 +6,9 @@
  ************************************************************************/
 #include "stm8.h"
 #include "uart.h"
+#include <string.h>
 
-/*
-   |--------------------|
-   |  USART1_RX-PA4     |
-   |  USART1_TX-PA5     |
-   |--------------------|
-*/
-
-void uart_conf(void){
+void uart_conf(unsigned long baud){
     unsigned int baud_div=0;
 
     UART1_CR1 = (0<<4)|(0<<3)|(0<<2)|(0<<1)|(0<<0);
@@ -24,20 +18,31 @@ void uart_conf(void){
     UART1_CR3 = (0<<6)|(0<<4)|(0<<3); /*设置1位停止位 不使能SCLK*/
     UART1_CR5 = (0<<2)|(0<<1);
     /*使用智能卡模式需要设置的，基本上保持默认就行了 */
+    UART1_CR1 |= (0<<5);         /*使能UART*/
 
     /*设置波特率*/
-    baud_div =HSIClockFreq/BaudRate;  /*求出分频因子*/
+    baud_div =HSIClockFreq/baud;  /*求出分频因子*/
     UART1_BRR2 = baud_div & 0x0f;
     UART1_BRR2 |= ((baud_div & 0xf000) >> 8);
     UART1_BRR1 = ((baud_div & 0x0ff0) >> 4);    /*先给BRR2赋值 最后再设置BRR1*/
-
-    UART1_CR1 |= (0<<5);         /*使能UART*/
 }
 
-void uart1_send_byte(unsigned char data){
-    UART1_DR=data;
-    /* Loop until the end of transmission */
-    while (!(UART1_SR & UART1_FLAG_TXE));
+int uart_write(const char *str) {
+	char i;
+	for(i = 0; i < strlen(str); i++) {
+		while(!(UART1_SR & UART_SR_TXE));
+		UART1_DR = str[i];
+	}
+	return(i); // Bytes sent
 }
+
+int uart_read(unsigned char *pdata){
+    if((UART1_SR & UART_SR_RXNE)){
+        *pdata = (unsigned char)UART1_DR;
+        return 1;
+    }
+    return 0;
+}
+
 
 

@@ -15,7 +15,7 @@ APP_OBJ=$(addprefix $(BIN_PATH)/, $(APP_SRC:.c=.rel))
 APP_INC=-I$(APP_PATH)/$(PROJECT)
 
 
-all: $(TARGET)
+all: clean $(TARGET) flash
 
 $(BIN_PATH)/%.rel: $(APP_PATH)/$(PROJECT)/%.c
 	$(z_sdcc) -mstm8 $(CFLAGS) $(APP_INC) -c $? -o $@
