@@ -6,15 +6,25 @@ z_packihx=${SDCC_PATH}/bin/packihx
 z_hex2bin=${HEX2BIN_PATH}/hex2bin
 z_stm8flash=${STM8FLASH_PATH}/stm8flash
 
-files_temp=*.asm *.lst *.rst *.rel *.sym *.ihx *.hex *.map *.lk *.bin *.cdb
+
+TARGET=$(BIN_PATH)/$(PROJECT).hex
 
 
-build:
-	$(z_sdcc) -lstm8 -mstm8 --out-fmt-ihx $(CFLAGS) $(LDFLAGS) $(APP_PATH)/$(PROJECT)/*.c
-	${z_packihx} *.ihx > $(PROJECT).hex
+APP_SRC=$(notdir $(wildcard $(APP_PATH)/$(PROJECT)/*.c))
+APP_OBJ=$(addprefix $(BIN_PATH)/, $(APP_SRC:.c=.rel))
+APP_INC=-I$(APP_PATH)/$(PROJECT)
+
+
+all: $(TARGET)
+
+$(BIN_PATH)/%.rel: $(APP_PATH)/$(PROJECT)/%.c
+	$(z_sdcc) -mstm8 $(CFLAGS) $(APP_INC) -c $? -o $@
+
+$(TARGET): $(APP_OBJ)
+	$(z_sdcc) -lstm8 -mstm8  --out-fmt-ihx $(CFLAGS) -o $(PROJECT).ihx $^
+	${z_packihx} $(PROJECT).ihx > $(PROJECT).hex
 	${z_hex2bin} $(PROJECT).hex
-
-	mv -f $(files_temp) $(BIN_PATH)
+	mv $(PROJECT).* $(BIN_PATH)/
 
 
 clean:
